@@ -2,18 +2,18 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const connectDB = require('./config/db');
-const authMiddleware = require('./src/middleware/authMiddleware'); // Importa o middleware de autenticação
+const authMiddleware = require('./middleware/authMiddleware'); // Importa o middleware de autenticação
 
 // --- Importações das Rotas ---
-const careRoutes = require('./src/routes/careRoutes');
-const cronogramaCapilarRoutes = require('./src/routes/cronogramaCapilar');
-const artigosRecomendadosRoutes = require('./src/routes/artigosRecomendados');
-const authRoutes = require('./src/routes/authRoutes');
-const aiRoutes = require('./src/routes/aiRoutes'); // Importa a nova rota de perguntas à IA
-const photoRoutes = require('./src/routes/photoRoutes'); // NOVO: Importa a rota de fotos
-const userRoutes = require('./src/routes/userRoutes'); // NOVO: Importa a rota de utilizadores
-const contactRoutes = require('./src/routes/contactRoutes'); // NOVO
-const scheduler = require('./src/scheduler'); // IMPORTAÇÃO
+const careRoutes = require('./routes/careRoutes');
+const cronogramaCapilarRoutes = require('./routes/cronogramaCapilar');
+const artigosRecomendadosRoutes = require('./routes/artigosRecomendados');
+const authRoutes = require('./routes/authRoutes');
+const aiRoutes = require('./routes/aiRoutes'); // Importa a nova rota de perguntas à IA
+const photoRoutes = require('./routes/photoRoutes'); // NOVO: Importa a rota de fotos
+const userRoutes = require('./routes/userRoutes'); // NOVO: Importa a rota de utilizadores
+const contactRoutes = require('./routes/contactRoutes'); // NOVO
+const scheduler = require('./scheduler'); // IMPORTAÇÃO
 
 // Conecta à base de dados
 connectDB();
