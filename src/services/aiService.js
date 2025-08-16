@@ -88,6 +88,9 @@ async function comparePhotos(imageBeforeBase64, imageAfterBase64, hairType) {
         const result = await visionModel.generateContent([prompt, imageBefore, imageAfter]);
         const response = await result.response;
         return response.text();
+        console.log('Iniciando análise com a IA...');
+console.log('Tamanho da imagem antes:', imageBefore.length); // Verifique se a imagem não está vazia
+console.log('Tamanho da imagem depois:', imageAfter.length); // Verifique se a imagem não está vazia
     } catch (error) {
         console.error('Erro ao chamar Gemini para análise de fotos:', error);
         throw new Error('Falha ao analisar as fotos com a IA.');
