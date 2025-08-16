@@ -27,4 +27,25 @@ router.post('/points', async (req, res) => {
     }
 });
 
+// Rota para atualizar a preferência de notificação push
+router.put('/notifications', async (req, res) => {
+    const user = req.user;
+    const { enabled } = req.body;
+
+    if (typeof enabled !== 'boolean') {
+        return res.status(400).json({ error: 'O valor de "enabled" deve ser verdadeiro ou falso.' });
+    }
+
+    try {
+        user.pushNotificationsEnabled = enabled;
+        await user.save();
+
+        res.status(200).json({ message: 'Preferência de notificação atualizada com sucesso.' });
+    } catch (error) {
+        console.error('Erro ao atualizar preferência de notificação:', error);
+        res.status(500).json({ error: 'Erro interno do servidor.' });
+    }
+});
+
+// Exporta o roteador uma única vez
 module.exports = router;

@@ -13,9 +13,13 @@ const aiRoutes = require('./src/routes/aiRoutes'); // Importa a nova rota de per
 const photoRoutes = require('./src/routes/photoRoutes'); // NOVO: Importa a rota de fotos
 const userRoutes = require('./src/routes/userRoutes'); // NOVO: Importa a rota de utilizadores
 const contactRoutes = require('./src/routes/contactRoutes'); // NOVO
+const scheduler = require('./src/scheduler'); // IMPORTAÇÃO
 
 // Conecta à base de dados
 connectDB();
+
+// INICIA O AGENDAMENTO APÓS A CONEXÃO COM O DB
+scheduler.generateAndSendNotifications;
 
 const app = express();
 const PORT = process.env.PORT || 3001;

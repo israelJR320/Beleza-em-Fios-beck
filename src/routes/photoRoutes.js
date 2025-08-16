@@ -23,19 +23,22 @@ router.post('/compare', async (req, res) => {
         user.weeklyVerificationsUsed = 0;
     }
 
-    if (user.weeklyVerificationsUsed >= VERIFICATIONS_PER_WEEK) {
-        if (user.points >= POINTS_FOR_EXTRA_VERIFICATION) {
-            user.points -= POINTS_FOR_EXTRA_VERIFICATION;
-            user.weeklyVerificationsUsed += 1;
-        } else {
-            return res.status(429).json({ error: 'Limite de verificações semanais atingido e pontos insuficientes.' });
-        }
-    } else {
+    let hasPermission = false;
+    if (user.weeklyVerificationsUsed < VERIFICATIONS_PER_WEEK) {
+        hasPermission = true;
+        user.weeklyVerificationsUsed += 1;
+    } else if (user.points >= POINTS_FOR_EXTRA_VERIFICATION) {
+        hasPermission = true;
+        user.points -= POINTS_FOR_EXTRA_VERIFICATION;
         user.weeklyVerificationsUsed += 1;
     }
 
+    if (!hasPermission) {
+        return res.status(429).json({ error: 'Limite de verificações semanais atingido e pontos insuficientes.' });
+    }
+
     user.lastVerificationDate = now;
-    await user.save();
+    await user.save(); // Salva uma única vez
 
     try {
         const analysis = await comparePhotos(imageBefore, imageAfter, hairType);

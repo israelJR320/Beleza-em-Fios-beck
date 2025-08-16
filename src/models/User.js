@@ -55,6 +55,14 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    fcmToken: {
+        type: String,
+        default: null,
+    },
+    pushNotificationsEnabled: {
+        type: Boolean,
+        default: true, // Por padrão, as notificações vêm ativadas
+    },
 });
 
 const User = mongoose.model('User', userSchema);
