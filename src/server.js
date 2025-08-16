@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const connectDB = require('./src/config/db');
+const connectDB = require('./config/db');
 const authMiddleware = require('./src/middleware/authMiddleware'); // Importa o middleware de autenticação
 
 // --- Importações das Rotas ---
