@@ -10,7 +10,7 @@ require('dotenv').config();
 // e o caminho deve ser configurado como uma variável de ambiente.
 // Exemplo no .env: FIREBASE_SERVICE_ACCOUNT_PATH=/caminho/para/seu/serviceAccountKey.json
 const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-const serviceAccount = require('../services/beleza-em-fios-822eaa7fb613.json');
+const serviceAccount = require('./beleza-em-fios-822eaa7fb613.json');
 
 if (!serviceAccountPath) {
     console.error('ERRO: Variável de ambiente FIREBASE_SERVICE_ACCOUNT_PATH não definida.');
