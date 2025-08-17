@@ -4,25 +4,32 @@ const Routine = require('../models/Routine');
 const { generateAiRoutine } = require('../services/aiService');
 
 router.get('/', async (req, res) => {
-    const { hairType, goal } = req.query;
+    // Agora a rota recebe todos os parâmetros do formulário
+    const { hairType, goal, frequency, scalp, hairThickness, hairDamage } = req.query;
 
-    if (!hairType || !goal) {
-        return res.status(400).json({ error: 'Tipo de cabelo e objetivo são necessários.' });
+    if (!hairType || !goal || !frequency || !scalp || !hairThickness || !hairDamage) {
+        return res.status(400).json({ error: 'Todos os campos do formulário são necessários.' });
     }
 
     try {
-        const cachedRoutine = await Routine.findOne({ hairType, goal }).sort({ generationDate: -1 });
+        // A lógica de cache agora usa todos os novos parâmetros
+        const cachedRoutine = await Routine.findOne({ hairType, goal, frequency, scalp, hairThickness, hairDamage }).sort({ generationDate: -1 });
         if (cachedRoutine) {
             console.log('Cronograma encontrado no cache!');
             return res.status(200).json({ routine: cachedRoutine });
         }
 
         console.log('Gerando cronograma com IA...');
-        const aiGeneratedContent = await generateAiRoutine(hairType, goal);
+        // A IA é chamada com todos os parâmetros do formulário
+        const aiGeneratedContent = await generateAiRoutine(hairType, goal, frequency, scalp, hairThickness, hairDamage);
 
         const newRoutine = new Routine({
             hairType,
             goal,
+            frequency,
+            scalp,
+            hairThickness,
+            hairDamage,
             duration: aiGeneratedContent.duration,
             steps: aiGeneratedContent.routine,
             products: aiGeneratedContent.products,
