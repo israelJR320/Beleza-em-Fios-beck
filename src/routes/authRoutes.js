@@ -1,8 +1,10 @@
+// authRoutes.js
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+const bcrypt = require('bcrypt'); // <-- NOVO: Importação do bcrypt
 
 require('dotenv').config();
 
@@ -55,5 +57,96 @@ router.post('/google', async (req, res) => {
         res.status(401).json({ error: 'Falha na autenticação.' });
     }
 });
+
+// <-- NOVO: Rota de Registo com Email e Password -->
+router.post('/register', async (req, res) => {
+    const { name, email, password } = req.body;
+
+    // 1. Validação simples
+    if (!name || !email || !password) {
+        return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+    }
+
+    try {
+        // 2. Verifica se o e-mail já está em uso
+        let existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(409).json({ error: 'Este e-mail já está registado.' });
+        }
+
+        // 3. Hashear a palavra-passe antes de guardar
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // 4. Cria o novo utilizador no banco de dados
+        const newUser = new User({
+            name,
+            email,
+            password: hashedPassword, // Guarda a palavra-passe hasheada
+        });
+        await newUser.save();
+
+        // 5. Gera um token JWT para o novo utilizador
+        const jwtToken = jwt.sign(
+            { userId: newUser._id, email: newUser.email },
+            JWT_SECRET,
+            { expiresIn: '1d' }
+        );
+        
+        // Retorna o token e os dados básicos do utilizador
+        res.status(201).json({ 
+            message: 'Registo bem-sucedido', 
+            token: jwtToken,
+            user: { _id: newUser._id, name: newUser.name, email: newUser.email }
+        });
+
+    } catch (error) {
+        console.error('Erro no registo:', error);
+        res.status(500).json({ error: 'Erro interno do servidor.' });
+    }
+});
+
+// <-- NOVO: Rota de Login com Email e Password -->
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    // 1. Validação simples
+    if (!email || !password) {
+        return res.status(400).json({ error: 'E-mail e palavra-passe são obrigatórios.' });
+    }
+
+    try {
+        // 2. Procura o utilizador pelo e-mail
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ error: 'Credenciais inválidas.' });
+        }
+
+        // 3. Compara a palavra-passe fornecida com a hasheada no banco de dados
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Credenciais inválidas.' });
+        }
+
+        // 4. Gera um token JWT para o utilizador autenticado
+        const jwtToken = jwt.sign(
+            { userId: user._id, email: user.email },
+            JWT_SECRET,
+            { expiresIn: '1d' }
+        );
+
+        // Retorna o token e os dados básicos do utilizador
+        res.status(200).json({ 
+            message: 'Login bem-sucedido', 
+            token: jwtToken,
+            user: { _id: user._id, name: user.name, email: user.email }
+        });
+
+    } catch (error) {
+        console.error('Erro no login:', error);
+        res.status(500).json({ error: 'Erro interno do servidor.' });
+    }
+});
+
 
 module.exports = router;

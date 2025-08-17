@@ -1,3 +1,5 @@
+// src/routes/careRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const DailyTip = require('../models/DailyTip');
