@@ -4,127 +4,166 @@ require('dotenv').config();
 // Inicializa a conexão com a API do Google Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Modelos Gemini: um para texto e um para visão (fotos)
+// Modelos Gemini: um para texto e outro para visão (fotos)
 const textModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 const visionModel = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
 
-// Função 1: Gera um cronograma capilar com duração e produtos
+// Função auxiliar para extrair JSON com segurança
+function extractJson(text) {
+    const match = text.match(/```json\n([\s\S]*?)\n```/);
+    if (!match) throw new Error('Formato JSON inválido na resposta da IA.');
+    return JSON.parse(match[1].trim());
+}
+
+// 1️⃣ Gera um cronograma capilar
 async function generateAiRoutine(hairType, goal, frequency, scalp, hairThickness, hairDamage) {
     try {
-        const prompt = `Atue como um especialista em cuidados capilares. Com base nos seguintes dados do usuário:
-        - Tipo de cabelo: ${hairType}
-        - Frequência de lavagem: ${frequency}
-        - Condição do couro cabeludo: ${scalp}
-        - Objetivo principal: ${goal}
-        - Espessura do fio: ${hairThickness}
-        - Danos identificados: ${hairDamage}
-        
-        Determine a duração mais adequada para um cronograma (semanal, quinzenal, etc.). Em seguida, gere um cronograma de cuidados capilares e uma lista de produtos recomendados. A resposta deve ser em formato JSON com três chaves: "duration" (uma string com a duração), "routine" (um array de objetos com as chaves "day", "time", "activity" e "product") e "products" (um array de strings com nomes de produtos).`;
+        const prompt = `Atue como especialista em cuidados capilares com base nos dados:
+- Tipo de cabelo: ${hairType}
+- Frequência de lavagem: ${frequency}
+- Couro cabeludo: ${scalp}
+- Objetivo: ${goal}
+- Espessura: ${hairThickness}
+- Danos: ${hairDamage}
+
+Gere um cronograma capilar personalizado, onde a IA decida a duração total do tratamento (em semanas) necessária para alcançar os objetivos, indicando:
+1. Os dias da semana em que cada tratamento (hidratação, nutrição, reconstrução) deve ser realizado.
+2. A duração de cada sessão de tratamento em minutos.
+3. Produtos recomendados para cada etapa do cronograma, detalhados no formato:
+{
+  "products": {
+    "shampoo": {
+      "type": "tipo de shampoo",
+      "description": "descrição de uso e ativos recomendados"
+    },
+    "mask_hidration": {
+      "type": "máscara de hidratação",
+      "description": "descrição de uso e ativos recomendados"
+    }
+  }
+}
+
+Retorne em JSON com as chaves: "duration" (tempo total em semanas), "routine" (tratamentos com dias e duração) e "products" (produtos detalhados conforme acima).
+
+Formato de exemplo:
+{
+  "duration": "X semanas",
+  "routine": {
+    "week1": {
+      "Monday": {"treatment": "hidratação", "minutes": 30, "products": ["mask_hidration"]},
+      "Wednesday": {"treatment": "nutrição", "minutes": 35, "products": ["mask_nutrition"]}
+    }
+  },
+  "products": {
+    "shampoo": {
+      "type": "limpeza profunda para couro cabeludo oleoso",
+      "description": "Busque shampoos com ativos como argila, menta ou chá verde para controlar a oleosidade do couro cabeludo."
+    },
+    "mask_hidration": {
+      "type": "máscara de hidratação",
+      "description": "Procure por máscaras com ácido hialurônico, pantenol (vitamina B5) e aloe vera para repor a água e o brilho dos fios finos e ressecados."
+    }
+  }
+}`;
 
         const result = await textModel.generateContent(prompt);
         const response = await result.response;
-        const jsonString = response.text().match(/```json\n([\s\S]*)\n```/)[1];
-        return JSON.parse(jsonString);
-
+        return extractJson(response.text());
     } catch (error) {
-        console.error('Erro ao chamar Gemini para cronograma:', error);
-        throw new Error('Falha ao gerar o cronograma com a IA.');
+        console.error('Erro ao gerar cronograma:', error);
+        throw new Error('Falha ao gerar cronograma com a IA.');
     }
 }
 
-// Função 2: Gera uma dica de cuidado diário com base no perfil e no clima
+
+// 2️⃣ Gera dica diária com base no clima e perfil
 async function generateAiTip(hairType, goal, city, weather) {
     try {
-        const prompt = `Gere uma dica de cuidado capilar diária para uma pessoa com o cabelo do tipo "${hairType}" e o objetivo de "${goal}", na cidade de ${city}, onde o clima atual é de ${weather.temperature}°C, com ${weather.humidity}% de humidade e está ${weather.condition}. A resposta deve ser em formato JSON com as chaves "tip" (string) e "alerts" (array de strings).`;
+        const prompt = `Gere uma dica de cuidado capilar diária para cabelo tipo "${hairType}" com objetivo "${goal}" na cidade ${city}, clima: ${weather.temperature}°C, ${weather.humidity}% umidade, ${weather.condition}. Retorne JSON com "tip" e "alerts".`;
 
         const result = await textModel.generateContent(prompt);
         const response = await result.response;
-        const jsonString = response.text().match(/```json\n([\s\S]*)\n```/)[1];
-        return JSON.parse(jsonString);
-
+        return extractJson(response.text());
     } catch (error) {
-        console.error('Erro ao chamar Gemini para dica:', error);
-        throw new Error('Falha ao gerar a dica com a IA.');
+        console.error('Erro ao gerar dica diária:', error);
+        throw new Error('Falha ao gerar dica diária com a IA.');
     }
 }
 
-// Função 3: Gera recomendações de artigos
+// 3️⃣ Gera artigos recomendados
 async function generateAiArticles(hairType, goal) {
     try {
-        const prompt = `Gere 5 títulos de artigos relacionados a cuidados para o cabelo do tipo "${hairType}" com o objetivo de "${goal}". A resposta deve ser em formato JSON com a chave "articles" (um array de strings).`;
+        const prompt = `Gere 5 títulos de artigos sobre cabelo tipo "${hairType}" com objetivo "${goal}". Retorne JSON com chave "articles".`;
 
         const result = await textModel.generateContent(prompt);
         const response = await result.response;
-        const jsonString = response.text().match(/```json\n([\s\S]*)\n```/)[1];
-        return JSON.parse(jsonString);
-
+        return extractJson(response.text());
     } catch (error) {
-        console.error('Erro ao chamar Gemini para artigos:', error);
-        throw new Error('Falha ao gerar os artigos com a IA.');
+        console.error('Erro ao gerar artigos:', error);
+        throw new Error('Falha ao gerar artigos com a IA.');
     }
 }
 
-// Função 4: Gera uma notificação push
+// 4️⃣ Gera notificação push divertida
 async function generateAiPushNotification(hairType) {
     try {
-        const prompt = `Gere uma única frase, alegre, divertida e engraçada, para uma notificação push. A mensagem deve ser curta, motivar a pessoa a cuidar do cabelo e ser baseada no tipo de cabelo \"${hairType}\". Use emojis! Exemplo: \"Cabelo cacheado, bora mostrar quem manda nos cachos! ✨\". Exemplo 2: \"Cabelo liso, a sua elegância brilha mais que o sol! ☀️\".`;
+        const prompt = `Gere uma frase curta, alegre e motivadora para notificação push, baseada no cabelo "${hairType}", usando emojis.`;
 
         const result = await textModel.generateContent(prompt);
         const response = await result.response;
-        return response.text();
+        return response.text().trim();
     } catch (error) {
-        console.error('Erro ao gerar a notificação push com a IA:', error);
-        throw new Error('Falha ao gerar a notificação push.');
+        console.error('Erro ao gerar notificação push:', error);
+        throw new Error('Falha ao gerar notificação push.');
     }
 }
 
-// Função 5: Responde a perguntas do utilizador
+// 5️⃣ Responde a perguntas do usuário
 async function askAiQuestion(question) {
     try {
-        const prompt = `Responda à seguinte pergunta de um utilizador sobre cuidados capilares: "${question}"`;
+        const prompt = `Responda à pergunta do usuário sobre cuidados capilares: "${question}"`;
 
         const result = await textModel.generateContent(prompt);
         const response = await result.response;
-        return response.text();
+        return response.text().trim();
     } catch (error) {
-        console.error('Erro na pergunta da IA:', error);
-        throw new Error('Não foi possível obter a resposta da IA.');
+        console.error('Erro ao responder pergunta:', error);
+        throw new Error('Falha ao responder pergunta da IA.');
     }
 }
 
-// Função 6: Compara fotos de cabelo
+// 6️⃣ Compara fotos de cabelo
 async function comparePhotos(imageBeforeBase64, imageAfterBase64, hairType) {
     try {
-        const prompt = `Analise as duas imagens. A primeira imagem é o cabelo "antes" e a segunda é o cabelo "depois". Avalie a condição do cabelo "depois" em comparação com o "antes" e com base no tipo de cabelo "${hairType}". Forneça um feedback detalhado sobre as melhorias. Seja específico sobre a saúde, brilho, volume e qualquer outra melhoria observada. A resposta deve ser em formato de texto.`;
+        const prompt = `Compare estas duas imagens de cabelo "${hairType}" (antes e depois). Avalie saúde, brilho, volume e melhorias. Retorne texto detalhado.`;
 
         const imageBefore = {
             inlineData: {
-                data: imageBeforeBase64.replace('data:image/png;base64,', ''),
+                data: imageBeforeBase64.replace(/^data:image\/\w+;base64,/, ''),
                 mimeType: 'image/png'
             }
         };
         const imageAfter = {
             inlineData: {
-                data: imageAfterBase64.replace('data:image/png;base64,', ''),
+                data: imageAfterBase64.replace(/^data:image\/\w+;base64,/, ''),
                 mimeType: 'image/png'
             }
         };
 
         const result = await visionModel.generateContent([prompt, imageBefore, imageAfter]);
         const response = await result.response;
-        return response.text();
+        return response.text().trim();
     } catch (error) {
-        console.error('Erro ao chamar Gemini para análise de fotos:', error);
-        throw new Error('Falha ao analisar as fotos com a IA.');
+        console.error('Erro ao comparar fotos:', error);
+        throw new Error('Falha ao analisar fotos com a IA.');
     }
 }
 
-// Exporta todas as funções de uma vez
 module.exports = {
     generateAiPushNotification,
     generateAiRoutine,
     generateAiTip,
     generateAiArticles,
     askAiQuestion,
-    comparePhotos,
+    comparePhotos
 };

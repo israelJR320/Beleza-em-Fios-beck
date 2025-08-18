@@ -21,8 +21,7 @@ router.get('/', async (req, res) => {
         }
 
         console.log('Gerando cronograma com IA...');
-        // A IA é chamada com todos os parâmetros do formulário
-        // A lógica de gerar os produtos baseados nisso deve estar dentro da função 'generateAiRoutine'
+        // ATUALIZADO: Agora a função generateAiRoutine retorna também os produtos detalhados com type e description
         const aiGeneratedContent = await generateAiRoutine(hairType, goal, frequency, scalp, hairThickness, hairDamage);
 
         const newRoutine = new Routine({
@@ -32,13 +31,21 @@ router.get('/', async (req, res) => {
             scalp,
             hairThickness,
             hairDamage,
+            // ATUALIZADO: duration vem diretamente da IA
             duration: aiGeneratedContent.duration,
+            // ATUALIZADO: steps agora inclui dias da semana, minutos e produtos
             steps: aiGeneratedContent.routine,
-            products: aiGeneratedContent.products, // Presume que a IA vai retornar um objeto com produtos
+            // ATUALIZADO: products inclui type e description conforme o novo formato
+            products: aiGeneratedContent.products,
         });
         await newRoutine.save();
 
-        res.status(200).json({ routine: newRoutine });
+        // ATUALIZADO: retornar o objeto completo detalhado do cronograma
+        res.status(200).json({
+            duration: newRoutine.duration,
+            routine: newRoutine.steps,
+            products: newRoutine.products
+        });
 
     } catch (error) {
         console.error('Erro ao gerar cronograma:', error);
