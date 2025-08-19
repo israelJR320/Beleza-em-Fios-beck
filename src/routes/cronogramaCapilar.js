@@ -2,11 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Routine = require('../models/Routine');
 const { generateAiRoutine } = require('../services/aiService');
-const authMiddleware = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware'); // 🔔 ADICIONADO: Importa o middleware de autenticação
 
-// 🔔 CORRIGIDO: Muda o método para POST e adiciona o middleware de autenticação
 router.post('/', authMiddleware, async (req, res) => {
-    // 🔔 CORRIGIDO: A rota agora recebe os parâmetros do corpo da requisição (req.body)
     const { hairType, goal, frequency, scalp, hairThickness, hairDamage, productPreferences } = req.body;
 
     if (!hairType || !goal || !frequency || !scalp || !hairThickness || !hairDamage) {
