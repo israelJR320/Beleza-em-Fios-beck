@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const { askAiQuestion, comparePhotos } = require('../services/aiService');
-const auth = require('../middleware/auth');
+const auth = require('../middleware/authMiddleware');
 
 const MAX_QUESTIONS_PER_DAY = 2;
 const POINTS_FOR_EXTRA_QUESTION = 200;
@@ -32,7 +32,7 @@ const checkAndResetWeeklyCounter = (user) => {
 };
 
 // 🔔 Rota para fazer uma pergunta à IA
-router.post('/', auth, async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
     const { question } = req.body;
     let user = req.user;
 
@@ -56,7 +56,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // 🔔 Rota para comparar fotos
-router.post('/compare', auth, async (req, res) => {
+router.post('/compare', authMiddleware, async (req, res) => {
     const { imageBefore, imageAfter } = req.body;
     let user = req.user;
     const hairType = user.profile?.hairType;

@@ -3,10 +3,10 @@ const router = express.Router();
 const DailyAlert = require('../models/DailyAlert');
 const { generateAiTip } = require('../services/aiService');
 const { getWeatherByCity } = require('../services/weatherService');
-const auth = require('../middleware/auth'); // Assumindo que você tem um middleware de autenticação
+const auth = require('../middleware/authMiddleware'); // Assumindo que você tem um middleware de autenticação
 
 // 🔔 CORRIGIDO: Adiciona o middleware de autenticação à rota
-router.get('/', auth, async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
     const { hairType, goal, city } = req.query;
     if (!hairType || !goal || !city) {
         return res.status(400).json({ error: 'Tipo de cabelo, objetivo e cidade são necessários.' });

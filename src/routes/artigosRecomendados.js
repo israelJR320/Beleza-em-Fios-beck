@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const ArticleRecommendation = require('../models/ArticleRecommendation');
 const { generateAiTip } = require('../services/aiService');
-const auth = require('../middleware/auth'); // Assumindo que você tem um middleware de autenticação
+const auth = require('../middleware/authMiddleware'); // Assumindo que você tem um middleware de autenticação
 
 // 🔔 CORRIGIDO: A rota agora só usa 'hairType' e 'goal'
-router.get('/', auth, async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
     const { hairType, goal } = req.query;
     if (!hairType || !goal) {
         return res.status(400).json({ error: 'Tipo de cabelo e objetivo são necessários.' });
