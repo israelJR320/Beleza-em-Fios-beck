@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const { askAiQuestion, comparePhotos } = require('../services/aiService');
-const auth = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 
 const MAX_QUESTIONS_PER_DAY = 2;
 const POINTS_FOR_EXTRA_QUESTION = 200;

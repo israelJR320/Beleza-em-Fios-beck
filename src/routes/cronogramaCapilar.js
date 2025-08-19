@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Routine = require('../models/Routine');
 const { generateAiRoutine } = require('../services/aiService');
-const auth = require('../middleware/authMiddleware'); // Assumindo que você tem um middleware de autenticação
+const authMiddleware = require('../middleware/authMiddleware');
 
 // 🔔 CORRIGIDO: Muda o método para POST e adiciona o middleware de autenticação
 router.post('/', authMiddleware, async (req, res) => {

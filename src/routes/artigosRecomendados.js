@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ArticleRecommendation = require('../models/ArticleRecommendation');
 const { generateAiTip } = require('../services/aiService');
-const auth = require('../middleware/authMiddleware'); // Assumindo que você tem um middleware de autenticação
+const authMiddleware = require('../middleware/authMiddleware');
 
 // 🔔 CORRIGIDO: A rota agora só usa 'hairType' e 'goal'
 router.get('/', authMiddleware, async (req, res) => {

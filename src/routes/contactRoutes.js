@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { sendContactEmail } = require('../services/emailService');
-const auth = require('../middleware/authMiddleware'); // 🔔 ADICIONADO: Importa o middleware de autenticação
+const authMiddleware = require('../middleware/authMiddleware');
 
 // 🔔 CORRIGIDO: Adiciona o middleware 'auth' para proteger a rota
 router.post('/', authMiddleware, async (req, res) => {
