@@ -1,26 +1,23 @@
 const admin = require('firebase-admin');
 require('dotenv').config();
 
-// Lê o conteúdo JSON da chave de serviço a partir da variável de ambiente
-const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+// 🔔 CORRIGIDO: O nome da variável agora é 'FIREBASE_SERVICE_ACCOUNT_PATH'
+const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
 
-// 🔔 CORRIGIDO: O código de inicialização do Firebase está agora no serviço
-if (!admin.apps.length) {
-    if (!serviceAccountKey) {
-        console.error('ERRO: Variável de ambiente FIREBASE_SERVICE_ACCOUNT_JSON não definida.');
-        process.exit(1);
-    }
-    
-    try {
-        const serviceAccount = JSON.parse(serviceAccountKey);
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
-        });
-        console.log('Conectado ao Firebase com sucesso.');
-    } catch (error) {
-        console.error('Erro ao inicializar o Firebase:', error.message);
-        process.exit(1);
-    }
+if (!serviceAccountKey) {
+    console.error('ERRO: Variável de ambiente FIREBASE_SERVICE_ACCOUNT_PATH não definida.');
+    process.exit(1);
+}
+
+try {
+    const serviceAccount = JSON.parse(serviceAccountKey);
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+    console.log('Conectado ao Firebase com sucesso.');
+} catch (error) {
+    console.error('Erro ao inicializar o Firebase:', error.message);
+    process.exit(1);
 }
 
 /**
