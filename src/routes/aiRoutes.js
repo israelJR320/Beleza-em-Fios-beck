@@ -85,7 +85,7 @@ router.post('/compare', authMiddleware, async (req, res) => {
 });
 
 // 🔔 Rota unificada para desbloquear recursos com pontos
-router.post('/unlock', auth, async (req, res) => {
+router.post('/unlock', authMiddleware, async (req, res) => {
     const { type } = req.body;
     let user = req.user;
 
