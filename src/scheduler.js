@@ -32,7 +32,7 @@ async function generateAndSendNotifications() {
                 const notificationText = await generateAiPushNotification(user.profile.hairType);
                 
                 // 4. Enviar a notificação push
-                await sendPushNotification(user.fcmToken, notificationText);
+                await sendPushNotification(user.fcmToken, 'Beleza em Fios', notificationText);
 
                 console.log(`Notificação enviada com sucesso para ${user.email}`);
 
@@ -52,16 +52,15 @@ async function generateAndSendNotifications() {
 // AGENDAMENTO CRON
 // =========================================================================
 
-// Agenda a tarefa para ser executada todos os dias às 9:00 da manhã
-// Sintaxe cron: 'minuto hora dia_do_mes mes dia_da_semana'
-// A expressão '0 9 * * *' significa:
-// * 0: No minuto 0 da hora
-// * 9: Na hora 9 (9 da manhã)
-// * *: Em qualquer dia do mês
-// * *: Em qualquer mês
-// * *: Em qualquer dia da semana
-cron.schedule('0 9 * * *', () => {
+// 🔔 CORRIGIDO: Agenda a tarefa para ser executada duas vezes ao dia, às 11:00 e às 19:00
+const scheduledJob = cron.schedule('0 11,19 * * *', () => {
     generateAndSendNotifications();
 });
 
 console.log('Agendador de notificações ativado.');
+
+// 🔔 CORRIGIDO: Exporta a função principal e o agendamento
+module.exports = {
+    generateAndSendNotifications,
+    scheduledJob,
+};

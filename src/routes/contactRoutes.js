@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const { sendContactEmail } = require('../services/emailService');
+const auth = require('../middleware/auth'); // 🔔 ADICIONADO: Importa o middleware de autenticação
 
-router.post('/', async (req, res) => {
+// 🔔 CORRIGIDO: Adiciona o middleware 'auth' para proteger a rota
+router.post('/', auth, async (req, res) => {
     const { subject, message } = req.body;
     
-    // Se o utilizador estiver autenticado, pegamos os dados dele.
-    const userName = req.user ? req.user.name : 'Utilizador não autenticado';
-    const userEmail = req.user ? req.user.email : 'nao_informado@exemplo.com';
+    // 🔔 MELHORIA: O middleware 'auth' garante que req.user existe.
+    // Agora podemos assumir que o utilizador está autenticado.
+    const userName = req.user.name;
+    const userEmail = req.user.email;
 
     if (!subject || !message) {
         return res.status(400).json({ error: 'Assunto e mensagem são obrigatórios.' });
@@ -17,6 +20,7 @@ router.post('/', async (req, res) => {
         await sendContactEmail(userEmail, userName, subject, message);
         res.status(200).json({ message: 'Mensagem enviada com sucesso!' });
     } catch (error) {
+        console.error('Erro ao enviar e-mail de contacto:', error);
         res.status(500).json({ error: error.message });
     }
 });

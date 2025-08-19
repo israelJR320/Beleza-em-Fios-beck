@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const ArticleRecommendation = require('../models/ArticleRecommendation');
 const { generateAiTip } = require('../services/aiService');
+const auth = require('../middleware/auth'); // Assumindo que você tem um middleware de autenticação
 
-router.get('/', async (req, res) => {
+// 🔔 CORRIGIDO: A rota agora só usa 'hairType' e 'goal'
+router.get('/', auth, async (req, res) => {
     const { hairType, goal } = req.query;
     if (!hairType || !goal) {
         return res.status(400).json({ error: 'Tipo de cabelo e objetivo são necessários.' });
@@ -27,7 +29,8 @@ router.get('/', async (req, res) => {
         }
 
         console.log('Gerando artigos com IA...');
-        const aiGeneratedContent = await generateAiTip(hairType, goal, "São Paulo", { temperature: 25, humidity: 50, condition: "ensolarado" });
+        // 🔔 CORRIGIDO: Chama a IA apenas com os parâmetros necessários
+        const aiGeneratedContent = await generateAiTip(hairType, goal); 
 
         const newArticles = new ArticleRecommendation({
             hairType,

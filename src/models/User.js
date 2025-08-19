@@ -4,7 +4,8 @@ const userSchema = new mongoose.Schema({
     // ID único fornecido pelo Google
     googleId: {
         type: String,
-        required: true,
+        // 🔔 CORRIGIDO: Este campo não é mais obrigatório
+        required: false,
         unique: true,
     },
     // Nome do utilizador

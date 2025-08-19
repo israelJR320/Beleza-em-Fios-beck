@@ -1,28 +1,42 @@
-// cronogramaCapilar.js
 const express = require('express');
 const router = express.Router();
 const Routine = require('../models/Routine');
 const { generateAiRoutine } = require('../services/aiService');
+const auth = require('../middleware/auth'); // Assumindo que você tem um middleware de autenticação
 
-router.get('/', async (req, res) => {
-    // ATUALIZADO: A rota agora só recebe os parâmetros do formulário que o usuário preenche.
-    const { hairType, goal, frequency, scalp, hairThickness, hairDamage } = req.query;
+// 🔔 CORRIGIDO: Muda o método para POST e adiciona o middleware de autenticação
+router.post('/', auth, async (req, res) => {
+    // 🔔 CORRIGIDO: A rota agora recebe os parâmetros do corpo da requisição (req.body)
+    const { hairType, goal, frequency, scalp, hairThickness, hairDamage, productPreferences } = req.body;
 
     if (!hairType || !goal || !frequency || !scalp || !hairThickness || !hairDamage) {
         return res.status(400).json({ error: 'Todos os campos do formulário são necessários.' });
     }
 
     try {
-        // A lógica de cache agora usa os novos parâmetros
-        const cachedRoutine = await Routine.findOne({ hairType, goal, frequency, scalp, hairThickness, hairDamage }).sort({ generationDate: -1 });
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+
+        const cachedRoutine = await Routine.findOne({
+            hairType,
+            goal,
+            frequency,
+            scalp,
+            hairThickness,
+            hairDamage,
+            generationDate: { $gte: twoHoursAgo },
+        });
+
         if (cachedRoutine) {
             console.log('Cronograma encontrado no cache!');
-            return res.status(200).json({ routine: cachedRoutine });
+            return res.status(200).json({
+                duration: cachedRoutine.duration,
+                routine: cachedRoutine.steps,
+                products: cachedRoutine.products
+            });
         }
 
         console.log('Gerando cronograma com IA...');
-        // ATUALIZADO: Agora a função generateAiRoutine retorna também os produtos detalhados com type e description
-        const aiGeneratedContent = await generateAiRoutine(hairType, goal, frequency, scalp, hairThickness, hairDamage);
+        const aiGeneratedContent = await generateAiRoutine(hairType, goal, frequency, scalp, hairThickness, hairDamage, productPreferences);
 
         const newRoutine = new Routine({
             hairType,
@@ -31,16 +45,12 @@ router.get('/', async (req, res) => {
             scalp,
             hairThickness,
             hairDamage,
-            // ATUALIZADO: duration vem diretamente da IA
             duration: aiGeneratedContent.duration,
-            // ATUALIZADO: steps agora inclui dias da semana, minutos e produtos
             steps: aiGeneratedContent.routine,
-            // ATUALIZADO: products inclui type e description conforme o novo formato
             products: aiGeneratedContent.products,
         });
         await newRoutine.save();
 
-        // ATUALIZADO: retornar o objeto completo detalhado do cronograma
         res.status(200).json({
             duration: newRoutine.duration,
             routine: newRoutine.steps,

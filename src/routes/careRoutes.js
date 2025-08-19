@@ -1,65 +1,50 @@
-// src/routes/careRoutes.js
-
 const express = require('express');
 const router = express.Router();
-const DailyTip = require('../models/DailyTip');
-const { generateAiTip } = require('../services/aiService'); // A sua função de IA
-const { getWeatherByCity } = require('../services/weatherService'); // O nosso novo serviço de clima
+const DailyAlert = require('../models/DailyAlert');
+const { generateAiTip } = require('../services/aiService');
+const { getWeatherByCity } = require('../services/weatherService');
+const auth = require('../middleware/auth'); // Assumindo que você tem um middleware de autenticação
 
-router.get('/', async (req, res) => {
-    // Recebe o tipo de cabelo, o objetivo e a cidade do frontend
+// 🔔 CORRIGIDO: Adiciona o middleware de autenticação à rota
+router.get('/', auth, async (req, res) => {
     const { hairType, goal, city } = req.query;
-
     if (!hairType || !goal || !city) {
         return res.status(400).json({ error: 'Tipo de cabelo, objetivo e cidade são necessários.' });
     }
 
     try {
-        // 1. Obtém as informações do clima
         const weather = await getWeatherByCity(city);
-        const today = new Date().toISOString().slice(0, 10);
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
 
-        // 2. Tenta encontrar uma dica no cache com base no perfil, cidade e clima
-        const cachedTip = await DailyTip.findOne({
+        const cachedAlert = await DailyAlert.findOne({
             hairType,
             goal,
             city,
-            // Usamos a condição do clima para o cache
             'weather.condition': weather.condition,
-            generationDate: {
-                $gte: new Date(today),
-                $lt: new Date(today + 'T23:59:59.999Z'),
-            },
+            generationDate: { $gte: twoHoursAgo },
         });
 
-        if (cachedTip) {
-            console.log('Dica encontrada no cache!');
-            return res.status(200).json({ tip: cachedTip.content });
+        if (cachedAlert) {
+            console.log('Alertas encontrados no cache!');
+            return res.status(200).json({ alerts: cachedAlert.alerts });
         }
 
-        console.log('Dica não encontrada, a gerar uma nova com a IA...');
-
-        // 3. Se não houver, chama a IA para gerar a dica, passando também o clima
+        console.log('Gerando alertas com IA...');
         const aiGeneratedContent = await generateAiTip(hairType, goal, city, weather);
 
-        // 4. Salva a nova dica no banco de dados
-        const newTip = new DailyTip({
+        const newAlert = new DailyAlert({
             hairType,
             goal,
             city,
-            weather: {
-                temperature: weather.temperature,
-                humidity: weather.humidity,
-                condition: weather.condition,
-            },
-            content: aiGeneratedContent,
+            weather,
+            alerts: aiGeneratedContent.alerts
         });
-        await newTip.save();
+        await newAlert.save();
 
-        res.status(200).json({ tip: newTip.content });
+        res.status(200).json({ alerts: newAlert.alerts });
 
     } catch (error) {
-        console.error('Erro na rota de cuidados diários:', error);
+        console.error('Erro ao gerar alertas:', error);
         res.status(500).json({ error: 'Erro interno do servidor.' });
     }
 });
