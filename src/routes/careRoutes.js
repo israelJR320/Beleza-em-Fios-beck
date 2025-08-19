@@ -3,9 +3,9 @@ const router = express.Router();
 const DailyAlert = require('../models/DailyAlert');
 const { generateAiTip } = require('../services/aiService');
 const { getWeatherByCity } = require('../services/weatherService');
-const auth = require('../middleware/authMiddleware'); // Assumindo que você tem um middleware de autenticação
+// ✅ CORRIGIDO: A importação do middleware de autenticação é adicionada.
+const authMiddleware = require('../middleware/authMiddleware');
 
-// 🔔 CORRIGIDO: Adiciona o middleware de autenticação à rota
 router.get('/', authMiddleware, async (req, res) => {
     const { hairType, goal, city } = req.query;
     if (!hairType || !goal || !city) {
