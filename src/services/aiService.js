@@ -18,7 +18,10 @@ async function generateAiRoutine(hairType, goal, frequency, scalp, hairThickness
     const hairDamageString = (hairDamage || []).join(', ');
 
     try {
-        const prompt = `Atue como especialista em cuidados capilares com base nos dados:
+        const prompt = `
+Atue como tricologista e dermatologista capilar. Baseie as recomendações em evidências científicas e práticas dermatológicas seguras.
+
+Dados do paciente:
 - Tipo de cabelo: ${hairType}
 - Frequência de lavagem: ${frequency}
 - Couro cabeludo: ${scalp}
@@ -26,23 +29,38 @@ async function generateAiRoutine(hairType, goal, frequency, scalp, hairThickness
 - Espessura: ${hairThickness}
 - Danos: ${hairDamageString}
 
-Gere um cronograma capilar personalizado. A IA decide a duração total do tratamento (em semanas), os tratamentos para cada dia da semana e os produtos recomendados.
+Tarefas:
+1. Gere um cronograma capilar personalizado, definindo a duração total (em semanas).
+2. Inclua os tratamentos recomendados para cada dia da semana (hidratação, nutrição, reconstrução ou cuidados específicos).
+3. Indique produtos e ativos reais e científicos (ex: shampoo com niacinamida, máscara com ceramidas, óleo de argan).
+4. Retorne APENAS o JSON no formato abaixo. As chaves devem estar em INGLÊS.
 
-Retorne APENAS o JSON. O JSON deve ter as chaves em INGLÊS: "duration" (tempo total em semanas), "routine" (uma LISTA de objetos, onde cada objeto representa um dia de tratamento), e "products" (um objeto de produtos detalhados).
-
-Exemplo do formato JSON esperado para a rotina (uma lista de objetos):
-"routine": [
-  {
-    "day": "Monday",
-    "treatment": "hidratação",
-    "products": ["mask_hidration"]
-  },
-  {
-    "day": "Wednesday",
-    "treatment": "nutrição",
-    "products": ["mask_nutrition"]
+Formato esperado:
+{
+  "duration": "X weeks",
+  "routine": [
+    {
+      "day": "Monday",
+      "treatment": "hydration",
+      "products": ["shampoo", "hyaluronic_acid_mask"]
+    },
+    {
+      "day": "Wednesday",
+      "treatment": "nutrition",
+      "products": ["coconut_oil_mask", "leave_in"]
+    }
+  ],
+  "products": {
+    "shampoo": {
+      "type": "Shampoo Purificante com Niacinamida",
+      "description": "Formulado para controlar a oleosidade do couro cabeludo e fortalecer a fibra capilar."
+    },
+    "hyaluronic_acid_mask": {
+      "type": "Máscara de Hidratação Profunda",
+      "description": "Com ácido hialurônico para repor a umidade e pantenol para dar brilho e maciez."
+    }
   }
-]
+}
 `;
 
         const result = await textModel.generateContent(prompt);
@@ -50,11 +68,27 @@ Exemplo do formato JSON esperado para a rotina (uma lista de objetos):
         const aiResponseText = response.text();
 
         console.log('✅ Resposta bruta da IA (aiService.js):', aiResponseText);
+
         const rawData = extractJson(aiResponseText);
         
+        let processedRoutine = [];
+        if (rawData.routine) {
+            processedRoutine = rawData.routine.map(dayData => ({
+                day: dayData.day,
+                treatment: dayData.treatment,
+                products: dayData.products.map(productKey => {
+                    const productDetails = rawData.products[productKey];
+                    return {
+                        type: productDetails.type,
+                        description: productDetails.description,
+                    };
+                }),
+            }));
+        }
+
         return {
             duration: rawData.duration,
-            routine: rawData.routine,
+            routine: processedRoutine,
             products: rawData.products,
         };
 
