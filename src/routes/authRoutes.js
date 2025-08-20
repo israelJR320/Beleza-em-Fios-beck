@@ -125,9 +125,17 @@ router.post('/login', async (req, res) => {
     }
 
     try {
-        const user = await User.findOne({ email });
+        // ✅ ALTERADO: Adicionado `.select('+password')` para garantir que a password seja carregada.
+        const user = await User.findOne({ email }).select('+password');
+        
         if (!user) {
             return res.status(401).json({ error: 'Credenciais inválidas.' });
+        }
+
+        // ✅ ALTERADO: Adicionado uma verificação para garantir que o campo 'password' existe no objeto 'user'.
+        if (!user.password) {
+            console.error('Utilizador encontrado, mas o campo de password está vazio.');
+            return res.status(500).json({ error: 'Erro interno do servidor: password não encontrada.' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
