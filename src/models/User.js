@@ -80,8 +80,6 @@ userSchema.methods.toJSON = function() {
 
 const User = mongoose.model('User', userSchema);
 
-module.exports = User;const mongoose = require('mongoose');
-
 const userSchema = new mongoose.Schema({
     // ID único fornecido pelo Google
     googleId: {
