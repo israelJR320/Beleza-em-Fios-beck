@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
         // 🔔 CORRIGIDO: Este campo não é mais obrigatório
         required: false,
         unique: true,
+        sparse: true,
     },
     // Nome do utilizador
     name: {
