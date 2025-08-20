@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const Routine = require('../models/Routine');
 const { generateAiRoutine } = require('../services/aiService');
-const authMiddleware = require('../middleware/authMiddleware'); // 🔔 ADICIONADO: Importa o middleware de autenticação
+const authMiddleware = require('../middleware/authMiddleware');
 
-router.post('/', authMiddleware, async (req, res) => {
+// ✅ CORREÇÃO: A rota agora tem um nome específico, alinhando com a chamada do frontend.
+router.post('/generate', authMiddleware, async (req, res) => {
     const { hairType, goal, frequency, scalp, hairThickness, hairDamage, productPreferences } = req.body;
 
     if (!hairType || !goal || !frequency || !scalp || !hairThickness || !hairDamage) {
@@ -25,7 +26,7 @@ router.post('/', authMiddleware, async (req, res) => {
         });
 
         if (cachedRoutine) {
-            console.log('Cronograma encontrado no cache!');
+            console.log('✅ Cronograma encontrado no cache!');
             return res.status(200).json({
                 duration: cachedRoutine.duration,
                 routine: cachedRoutine.steps,
@@ -33,8 +34,15 @@ router.post('/', authMiddleware, async (req, res) => {
             });
         }
 
-        console.log('Gerando cronograma com IA...');
+        console.log('⏳ Gerando cronograma com IA...');
         const aiGeneratedContent = await generateAiRoutine(hairType, goal, frequency, scalp, hairThickness, hairDamage, productPreferences);
+
+        // ✅ CORREÇÃO: Verifica se o conteúdo gerado pela IA é válido.
+        // Isso impede o erro de 'rotina vazia'.
+        if (!aiGeneratedContent || !aiGeneratedContent.routine || aiGeneratedContent.routine.length === 0) {
+            console.error('❌ Erro na geração da rotina: A IA devolveu dados incompletos ou vazios.');
+            return res.status(500).json({ error: 'Erro ao gerar a rotina. Tente novamente.' });
+        }
 
         const newRoutine = new Routine({
             hairType,
@@ -49,6 +57,7 @@ router.post('/', authMiddleware, async (req, res) => {
         });
         await newRoutine.save();
 
+        console.log('🎉 Cronograma gerado e salvo com sucesso!');
         res.status(200).json({
             duration: newRoutine.duration,
             routine: newRoutine.steps,
@@ -56,7 +65,7 @@ router.post('/', authMiddleware, async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Erro ao gerar cronograma:', error);
+        console.error('❌ Erro ao gerar cronograma:', error);
         res.status(500).json({ error: 'Erro interno do servidor.' });
     }
 });

@@ -12,6 +12,7 @@ yarn-error.log*
 
 # Diretório de dependências do Node.js
 node_modules
+node_modules
 
 # Arquivos de build/compilação (se usar)
 /dist
