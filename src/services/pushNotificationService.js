@@ -2,7 +2,7 @@ const admin = require('firebase-admin');
 require('dotenv').config();
 
 // 🔔 CORRIGIDO: O nome da variável agora é 'FIREBASE_SERVICE_ACCOUNT_PATH'
-const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
 if (!serviceAccountKey) {
     console.error('ERRO: Variável de ambiente FIREBASE_SERVICE_ACCOUNT_PATH não definida.');
