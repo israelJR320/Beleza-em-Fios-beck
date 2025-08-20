@@ -2,21 +2,17 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
-// Inicializa a conexão com a API do Google Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Modelos Gemini: um para texto e outro para visão (fotos)
 const textModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 const visionModel = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
 
-// Função auxiliar para extrair JSON com segurança
 function extractJson(text) {
     const match = text.match(/```json\n([\s\S]*?)\n```/);
     if (!match) throw new Error('Formato JSON inválido na resposta da IA.');
     return JSON.parse(match[1].trim());
 }
 
-// 1️⃣ Gera um cronograma capilar
 async function generateAiRoutine(hairType, goal, frequency, scalp, hairThickness, hairDamage) {
     const hairGoalsString = (goal || []).join(', ');
     const hairDamageString = (hairDamage || []).join(', ');
@@ -32,18 +28,51 @@ async function generateAiRoutine(hairType, goal, frequency, scalp, hairThickness
 
 Gere um cronograma capilar personalizado, onde a IA decida a duração total do tratamento (em semanas), os tratamentos para cada dia da semana e os produtos recomendados.
 
-Retorne APENAS o JSON com as chaves: "duration" (tempo total em semanas, ex: "4 semanas"), "routine" (um objeto com as semanas e os dias, ex: {"week1": {"Monday": {"treatment": "Hidratação"}, ...}}), e "products" (um objeto com os produtos recomendados para o tipo de cabelo e objetivos, ex: {"shampoo": {"type": "Shampoo Purificante", "description": "Limpeza profunda para couro cabeludo oleoso."}, ...}).
+Retorne APENAS o JSON. O JSON deve ter as chaves em INGLÊS: "duration" (tempo total em semanas), "routine" (um objeto com as semanas e os dias), e "products" (um objeto de produtos detalhados).
 
-Certifique-se de que a resposta é um JSON válido e sem texto adicional fora do bloco de código.`;
+Exemplo do formato JSON esperado para a rotina (um objeto de objetos):
+"routine": {
+  "week1": {
+    "Monday": {"treatment": "hidratação"},
+    "Wednesday": {"treatment": "nutrição"}
+  }
+}
+`;
 
         const result = await textModel.generateContent(prompt);
         const response = await result.response;
         const aiResponseText = response.text();
 
-        // ✅ CORREÇÃO: Log da resposta exata da IA para depuração
         console.log('✅ Resposta bruta da IA (aiService.js):', aiResponseText);
 
-        return extractJson(aiResponseText);
+        const rawData = extractJson(aiResponseText);
+        
+        let processedRoutine = [];
+        if (rawData.routine) {
+            Object.values(rawData.routine).forEach((week) => { // ✅ CORREÇÃO: Removida a anotação ': any'
+                Object.values(week).forEach((day) => { // ✅ CORREÇÃO: Removida a anotação ': any'
+                    processedRoutine.push(day);
+                });
+            });
+        }
+        
+        const processedProducts = {};
+        if (rawData.products) {
+            for (const key in rawData.products) {
+                const product = rawData.products[key];
+                processedProducts[key] = {
+                    type: product.tipo || product.type,
+                    description: product.descrição || product.description,
+                };
+            }
+        }
+
+        return {
+            duration: rawData.duração || rawData.duration,
+            routine: processedRoutine,
+            products: processedProducts,
+        };
+
     } catch (error) {
         console.error('❌ Erro ao gerar cronograma:', error);
         throw new Error('Falha ao gerar cronograma com a IA.');
