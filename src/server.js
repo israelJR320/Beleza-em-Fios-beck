@@ -4,6 +4,7 @@ require('dotenv').config();
 const connectDB = require('./config/db');
 const authMiddleware = require('./middleware/authMiddleware');
 
+// --- Importações das Rotas ---
 const careRoutes = require('./routes/careRoutes');
 const cronogramaCapilarRoutes = require('./routes/cronogramaCapilar');
 const artigosRecomendadosRoutes = require('./routes/artigosRecomendados');
@@ -32,11 +33,15 @@ app.get('/', (req, res) => {
     res.status(200).json({ message: 'Servidor Beleza em Fios está a funcionar!' });
 });
 
+// ✅ Opção 2: Adicionar uma rota /health no backend (server.js)
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', message: 'Servidor está saudável!' });
+});
+
 const startServer = async () => {
     try {
         await connectDB();
         app.listen(PORT, () => {
-            // 🔔 CORRIGIDO: Mensagem de log mais genérica
             console.log(`Servidor a correr na porta ${PORT}`);
         });
 

@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // Rota para obter as configurações do utilizador
-router.get('/settings', async (req, res) => {
+// 🔔 CORRIGIDO: Adiciona o middleware de autenticação
+router.get('/settings', authMiddleware, async (req, res) => {
     const user = req.user;
 
     if (!user) {
@@ -11,7 +13,6 @@ router.get('/settings', async (req, res) => {
     }
 
     try {
-        // Encontra o utilizador e retorna apenas as configurações relevantes
         const userSettings = await User.findById(user._id).select('pushNotificationsEnabled');
 
         if (!userSettings) {
@@ -26,7 +27,8 @@ router.get('/settings', async (req, res) => {
 });
 
 // Rota para atualizar o perfil do utilizador (nome, sexo, foto, etc.)
-router.put('/profile', async (req, res) => {
+// 🔔 CORRIGIDO: Adiciona o middleware de autenticação
+router.put('/profile', authMiddleware, async (req, res) => {
     const user = req.user;
     const { name, photo, profile } = req.body;
 
@@ -58,7 +60,8 @@ router.put('/profile', async (req, res) => {
 });
 
 // Rota para excluir o perfil do utilizador
-router.delete('/profile', async (req, res) => {
+// 🔔 CORRIGIDO: Adiciona o middleware de autenticação
+router.delete('/profile', authMiddleware, async (req, res) => {
     const user = req.user;
 
     try {
@@ -77,12 +80,13 @@ router.delete('/profile', async (req, res) => {
 });
 
 // Rota para atualizar a pontuação do utilizador
-router.post('/points', async (req, res) => {
+// 🔔 CORRIGIDO: Adiciona o middleware de autenticação
+router.post('/points', authMiddleware, async (req, res) => {
     const user = req.user;
-    const { action, points } = req.body;
+    const { points } = req.body; // 🔔 CORRIGIDO: Remove o campo 'action'
 
-    if (!action || typeof points !== 'number') {
-        return res.status(400).json({ error: 'Ação e pontuação são necessárias.' });
+    if (typeof points !== 'number') {
+        return res.status(400).json({ error: 'A pontuação deve ser um número.' });
     }
 
     try {
@@ -98,7 +102,8 @@ router.post('/points', async (req, res) => {
 });
 
 // Rota para atualizar a preferência de notificação push
-router.put('/notifications', async (req, res) => {
+// 🔔 CORRIGIDO: Adiciona o middleware de autenticação
+router.put('/notifications', authMiddleware, async (req, res) => {
     const user = req.user;
     const { enabled } = req.body;
 
@@ -118,7 +123,8 @@ router.put('/notifications', async (req, res) => {
 });
 
 // Rota para obter os dados do perfil do utilizador
-router.get('/profile', async (req, res) => {
+// 🔔 CORRIGIDO: Adiciona o middleware de autenticação
+router.get('/profile', authMiddleware, async (req, res) => {
     const user = req.user;
 
     if (!user) {
@@ -136,6 +142,5 @@ router.get('/profile', async (req, res) => {
         res.status(500).json({ error: 'Erro interno do servidor.' });
     }
 });
-
 
 module.exports = router;
