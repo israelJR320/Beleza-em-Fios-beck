@@ -5,7 +5,7 @@ const { generateAiRoutine } = require('../services/aiService');
 const authMiddleware = require('../middleware/authMiddleware');
 
 router.post('/generate', authMiddleware, async (req, res) => {
-    const { hairType, goal, frequency, scalp, hairThickness, hairDamage } = req.body; // ✅ CORREÇÃO: Removido 'productPreferences'
+    const { hairType, goal, frequency, scalp, hairThickness, hairDamage } = req.body;
 
     if (!hairType || !goal || !frequency || !scalp || !hairThickness || !hairDamage) {
         return res.status(400).json({ error: 'Todos os campos do formulário são necessários.' });
@@ -37,7 +37,6 @@ router.post('/generate', authMiddleware, async (req, res) => {
         
         let aiGeneratedContent;
         try {
-            // ✅ CORREÇÃO: Removido 'productPreferences' da chamada da função
             aiGeneratedContent = await generateAiRoutine(hairType, goal, frequency, scalp, hairThickness, hairDamage);
             console.log('✅ Resposta da IA recebida: (cronogramaCapilar.js)', aiGeneratedContent);
         } catch (aiError) {

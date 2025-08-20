@@ -26,17 +26,23 @@ async function generateAiRoutine(hairType, goal, frequency, scalp, hairThickness
 - Espessura: ${hairThickness}
 - Danos: ${hairDamageString}
 
-Gere um cronograma capilar personalizado, onde a IA decida a duração total do tratamento (em semanas), os tratamentos para cada dia da semana e os produtos recomendados.
+Gere um cronograma capilar personalizado. A IA decide a duração total do tratamento (em semanas), os tratamentos para cada dia da semana e os produtos recomendados.
 
-Retorne APENAS o JSON. O JSON deve ter as chaves em INGLÊS: "duration" (tempo total em semanas), "routine" (um objeto com as semanas e os dias), e "products" (um objeto de produtos detalhados).
+Retorne APENAS o JSON. O JSON deve ter as chaves em INGLÊS: "duration" (tempo total em semanas), "routine" (uma LISTA de objetos, onde cada objeto representa um dia de tratamento), e "products" (um objeto de produtos detalhados).
 
-Exemplo do formato JSON esperado para a rotina (um objeto de objetos):
-"routine": {
-  "week1": {
-    "Monday": {"treatment": "hidratação"},
-    "Wednesday": {"treatment": "nutrição"}
+Exemplo do formato JSON esperado para a rotina (uma lista de objetos):
+"routine": [
+  {
+    "day": "Monday",
+    "treatment": "hidratação",
+    "products": ["mask_hidration"]
+  },
+  {
+    "day": "Wednesday",
+    "treatment": "nutrição",
+    "products": ["mask_nutrition"]
   }
-}
+]
 `;
 
         const result = await textModel.generateContent(prompt);
@@ -44,33 +50,12 @@ Exemplo do formato JSON esperado para a rotina (um objeto de objetos):
         const aiResponseText = response.text();
 
         console.log('✅ Resposta bruta da IA (aiService.js):', aiResponseText);
-
         const rawData = extractJson(aiResponseText);
         
-        let processedRoutine = [];
-        if (rawData.routine) {
-            Object.values(rawData.routine).forEach((week) => { // ✅ CORREÇÃO: Removida a anotação ': any'
-                Object.values(week).forEach((day) => { // ✅ CORREÇÃO: Removida a anotação ': any'
-                    processedRoutine.push(day);
-                });
-            });
-        }
-        
-        const processedProducts = {};
-        if (rawData.products) {
-            for (const key in rawData.products) {
-                const product = rawData.products[key];
-                processedProducts[key] = {
-                    type: product.tipo || product.type,
-                    description: product.descrição || product.description,
-                };
-            }
-        }
-
         return {
-            duration: rawData.duração || rawData.duration,
-            routine: processedRoutine,
-            products: processedProducts,
+            duration: rawData.duration,
+            routine: rawData.routine,
+            products: rawData.products,
         };
 
     } catch (error) {
