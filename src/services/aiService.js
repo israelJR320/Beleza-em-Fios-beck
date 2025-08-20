@@ -1,4 +1,4 @@
-// aiService.js
+// src/services/aiService.js
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
@@ -17,7 +17,6 @@ function extractJson(text) {
 }
 
 // 1️⃣ Gera um cronograma capilar
-// ✅ CORRIGIDO: Removido 'productPreferences' da assinatura da função e do prompt
 async function generateAiRoutine(hairType, goal, frequency, scalp, hairThickness, hairDamage) {
     const hairGoalsString = (goal || []).join(', ');
     const hairDamageString = (hairDamage || []).join(', ');
@@ -31,61 +30,31 @@ async function generateAiRoutine(hairType, goal, frequency, scalp, hairThickness
 - Espessura: ${hairThickness}
 - Danos: ${hairDamageString}
 
-Gere um cronograma capilar personalizado, onde a IA decida a duração total do tratamento (em semanas) necessária para alcançar os objetivos, indicando:
-1. Os dias da semana em que cada tratamento (hidratação, nutrição, reconstrução) deve ser realizado.
-2. A duração de cada sessão de tratamento em minutos.
-3. Produtos recomendados para cada etapa do cronograma, detalhados no formato:
-{
-  "products": {
-    "shampoo": {
-      "type": "tipo de shampoo",
-      "description": "descrição de uso e ativos recomendados"
-    },
-    "mask_hidration": {
-      "type": "máscara de hidratação",
-      "description": "descrição de uso e ativos recomendados"
-    }
-  }
-}
+Gere um cronograma capilar personalizado, onde a IA decida a duração total do tratamento (em semanas), os tratamentos para cada dia da semana e os produtos recomendados.
 
-Retorne em JSON com as chaves: "duration" (tempo total em semanas), "routine" (tratamentos com dias e duração) e "products" (produtos detalhados conforme acima).
+Retorne APENAS o JSON com as chaves: "duration" (tempo total em semanas, ex: "4 semanas"), "routine" (um objeto com as semanas e os dias, ex: {"week1": {"Monday": {"treatment": "Hidratação"}, ...}}), e "products" (um objeto com os produtos recomendados para o tipo de cabelo e objetivos, ex: {"shampoo": {"type": "Shampoo Purificante", "description": "Limpeza profunda para couro cabeludo oleoso."}, ...}).
 
-Formato de exemplo:
-{
-  "duration": "X semanas",
-  "routine": {
-    "week1": {
-      "Monday": {"treatment": "hidratação", "minutes": 30, "products": ["mask_hidration"]},
-      "Wednesday": {"treatment": "nutrição", "minutes": 35, "products": ["mask_nutrition"]}
-    }
-  },
-  "products": {
-    "shampoo": {
-      "type": "limpeza profunda para couro cabeludo oleoso",
-      "description": "Busque shampoos com ativos como argila, menta ou chá verde para controlar a oleosidade do couro cabeludo."
-    },
-    "mask_hidration": {
-      "type": "máscara de hidratação",
-      "description": "Procure por máscaras com ácido hialurônico, pantenol (vitamina B5) e aloe vera para repor a água e o brilho dos fios finos e ressecados."
-    }
-  }
-}`;
+Certifique-se de que a resposta é um JSON válido e sem texto adicional fora do bloco de código.`;
 
         const result = await textModel.generateContent(prompt);
         const response = await result.response;
-        return extractJson(response.text());
+        const aiResponseText = response.text();
+
+        // ✅ CORREÇÃO: Log da resposta exata da IA para depuração
+        console.log('✅ Resposta bruta da IA (aiService.js):', aiResponseText);
+
+        return extractJson(aiResponseText);
     } catch (error) {
-        console.error('Erro ao gerar cronograma:', error);
+        console.error('❌ Erro ao gerar cronograma:', error);
         throw new Error('Falha ao gerar cronograma com a IA.');
     }
 }
 
 
 // 2️⃣ Gera dica diária com base no clima e perfil
-// 🔔 CORRIGIDO: Retorna um objeto JSON com a chave 'alerts'
 async function generateAiTip(hairType, goal, city, weather) {
     try {
-        const prompt = `Gere uma dica de cuidado capilar diária para cabelo tipo "${hairType}" com objetivo "${goal}". Retorne JSON com a chave "alerts".`;
+        const prompt = `Gere uma dica de cuidado capilar diária para cabelo tipo "${hairType}" com objetivo "${goal}" na cidade ${city}, clima: ${weather.temperature}°C, ${weather.humidity}% umidade, ${weather.condition}. Retorne JSON com a chave "alerts".`;
 
         const result = await textModel.generateContent(prompt);
         const response = await result.response;
@@ -97,7 +66,6 @@ async function generateAiTip(hairType, goal, city, weather) {
 }
 
 // 3️⃣ Gera artigos recomendados
-// 🔔 CORRIGIDO: Assinatura da função para receber apenas hairType e goal
 async function generateAiArticles(hairType, goal) {
     try {
         const prompt = `Gere 5 títulos de artigos sobre cabelo tipo "${hairType}" com objetivo "${goal}". Retorne JSON com chave "articles".`;
