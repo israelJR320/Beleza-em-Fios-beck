@@ -6,8 +6,8 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 // 🔔 CORRIGIDO: A rota agora só usa 'hairType' e 'goal'
 router.get('/', authMiddleware, async (req, res) => {
-    const { hairType, goal } = req.query;
-    if (!hairType || !goal) {
+    const { tipoCabelo, objetivos } = req.query;
+    if (!tipoCabelo || !objetivos) {
         return res.status(400).json({ error: 'Tipo de cabelo e objetivo são necessários.' });
     }
 
@@ -15,8 +15,8 @@ router.get('/', authMiddleware, async (req, res) => {
         const today = new Date().toISOString().slice(0, 10);
 
         const cachedArticles = await ArticleRecommendation.findOne({
-            hairType,
-            goal,
+            tipoCabelo,
+            objetivos,
             generationDate: {
                 $gte: new Date(today),
                 $lt: new Date(today + 'T23:59:59.999Z'),
@@ -30,11 +30,11 @@ router.get('/', authMiddleware, async (req, res) => {
 
         console.log('Gerando artigos com IA...');
         // 🔔 CORRIGIDO: Chama a IA apenas com os parâmetros necessários
-        const aiGeneratedContent = await generateAiTip(hairType, goal); 
+        const aiGeneratedContent = await generateAiTip(tipoCabelo, objetivos); 
 
         const newArticles = new ArticleRecommendation({
-            hairType,
-            goal,
+            tipoCabelo,
+            objetivos,
             articles: aiGeneratedContent.articles
         });
         await newArticles.save();

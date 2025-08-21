@@ -84,9 +84,9 @@ Formato esperado:
 
 
 // 2️⃣ Gera dica diária com base no clima e perfil
-async function generateAiTip(hairType, goal, city, weather) {
+async function generateAiTip(tipoCabelo, objetivos, city, weather) {
     try {
-        const prompt = `Gere uma dica de cuidado capilar diária para cabelo tipo "${hairType}" com objetivo "${goal}". Retorne JSON com a chave "alerts".`;
+        const prompt = `Gere uma dica de cuidado capilar diária para cabelo tipo "${tipoCabelo}" com objetivo "${objetivos}". Retorne JSON com a chave "alerts".`;
 
         const result = await textModel.generateContent(prompt);
         const response = await result.response;
@@ -98,9 +98,9 @@ async function generateAiTip(hairType, goal, city, weather) {
 }
 
 // 3️⃣ Gera artigos recomendados
-async function generateAiArticles(hairType, goal) {
+async function generateAiArticles(tipoCabelo, objetivos) {
     try {
-        const prompt = `Gere 5 títulos de artigos sobre cabelo tipo "${hairType}" com objetivo "${goal}". Retorne JSON com chave "articles".`;
+        const prompt = `Gere 5 títulos de artigos sobre cabelo tipo "${tipoCabelo}" com objetivo "${objetivos}". Retorne JSON com chave "articles".`;
 
         const result = await textModel.generateContent(prompt);
         const response = await result.response;
@@ -112,9 +112,9 @@ async function generateAiArticles(hairType, goal) {
 }
 
 // 4️⃣ Gera notificação push divertida
-async function generateAiPushNotification(hairType) {
+async function generateAiPushNotification(tipoCabelo) {
     try {
-        const prompt = `Gere uma frase curta, alegre, divertida e motivadora para notificação push, baseada no cabelo "${hairType}", usando emojis.`;
+        const prompt = `Gere uma frase curta, alegre, divertida e motivadora para notificação push, baseada no cabelo "${tipoCabelo}", usando emojis.`;
 
         const result = await textModel.generateContent(prompt);
         const response = await result.response;
