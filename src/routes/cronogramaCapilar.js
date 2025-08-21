@@ -4,14 +4,14 @@ const express = require('express');
 const router = express.Router();
 const Routine = require('../models/Routine');
 const { generateAiRoutine } = require('../services/aiService');
-const authMiddleware = require('../middleware/authMiddleware');
+const authMiddleware = require('..//middleware/authMiddleware');
 
 router.post('/generate', authMiddleware, async (req, res) => {
     // ✅ CORREÇÃO: Adicionada a nova propriedade 'startDate'
     const { tipoCabelo, objetivos, frequencia, condicaoCouroCabeludo, espessura, danos, startDate } = req.body;
 
-    // ✅ CORREÇÃO: Validação para incluir a data de início
-    if (!tipoCabelo || !objetivos || !frequencia || !condicaoCouroCabeludo || !espessura || !danos || !startDate) {
+    // ✅ CORREÇÃO: Validação mais robusta para arrays
+    if (!tipoCabelo || !frequencia || !condicaoCouroCabeludo || !espessura || !danos || danos.length === 0 || !objetivos || objetivos.length === 0 || !startDate) {
         return res.status(400).json({ error: 'Todos os campos do formulário são necessários.' });
     }
 
