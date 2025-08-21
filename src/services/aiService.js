@@ -19,7 +19,7 @@ async function generateAiRoutine(hairType, goal, frequency, scalp, hairThickness
 
     try {
         const prompt = `
-Atue como tricologista e dermatologista capilar. Baseie as recomendações em evidências científicas e práticas dermatológicas seguras.
+Atue como tricologista, dermatologista capilar e especialista capilar. Baseie as recomendações em evidências científicas e práticas dermatológicas seguras.
 
 Dados do paciente:
 - Tipo de cabelo: ${hairType}
@@ -42,20 +42,24 @@ Formato esperado:
     {
       "day": "Monday",
       "treatment": "hydration",
-      "products": ["shampoo", "hyaluronic_acid_mask"]
-    },
-    {
-      "day": "Wednesday",
-      "treatment": "nutrition",
-      "products": ["coconut_oil_mask", "leave_in"]
+      "products": [
+        {
+          "type": "shampoo",
+          "description": "Shampoo Purificante com Niacinamida"
+        },
+        {
+          "type": "mask",
+          "description": "Máscara de Hidratação Profunda com ácido hialurônico"
+        }
+      ]
     }
   ],
   "products": {
-    "shampoo": {
+    "shampoo_purificante": {
       "type": "Shampoo Purificante com Niacinamida",
       "description": "Formulado para controlar a oleosidade do couro cabeludo e fortalecer a fibra capilar."
     },
-    "hyaluronic_acid_mask": {
+    "mascara_hidratacao": {
       "type": "Máscara de Hidratação Profunda",
       "description": "Com ácido hialurônico para repor a umidade e pantenol para dar brilho e maciez."
     }
@@ -73,23 +77,43 @@ Formato esperado:
         
         let processedRoutine = [];
         if (rawData.routine) {
-            processedRoutine = rawData.routine.map(dayData => ({
-                day: dayData.day,
-                treatment: dayData.treatment,
-                products: dayData.products.map(productKey => {
-                    const productDetails = rawData.products[productKey];
-                    return {
-                        type: productDetails.type,
-                        description: productDetails.description,
-                    };
-                }),
-            }));
+            processedRoutine = rawData.routine.map(dayData => {
+                const productsArray = dayData.products.map(product => {
+                    if (typeof product === 'string') {
+                        const productDetails = rawData.products[product];
+                        return {
+                            type: product,
+                            description: productDetails ? productDetails.description : 'Descrição não encontrada.',
+                        };
+                    } else if (product.type && product.description) {
+                        return product;
+                    }
+                    return null;
+                }).filter(p => p !== null);
+
+                return {
+                    day: dayData.day || dayData.dia,
+                    treatment: dayData.treatment || dayData.tratamento,
+                    products: productsArray,
+                };
+            });
+        }
+        
+        const processedProducts = {};
+        if (rawData.products) {
+            for (const key in rawData.products) {
+                const product = rawData.products[key];
+                processedProducts[key] = {
+                    type: product.tipo || product.type,
+                    description: product.descrição || product.description,
+                };
+            }
         }
 
         return {
-            duration: rawData.duration,
+            duration: rawData.duration || rawData.duração,
             routine: processedRoutine,
-            products: rawData.products,
+            products: processedProducts,
         };
 
     } catch (error) {
@@ -102,7 +126,7 @@ Formato esperado:
 // 2️⃣ Gera dica diária com base no clima e perfil
 async function generateAiTip(hairType, goal, city, weather) {
     try {
-        const prompt = `Gere uma dica de cuidado capilar diária para cabelo tipo "${hairType}" com objetivo "${goal}" na cidade ${city}, clima: ${weather.temperature}°C, ${weather.humidity}% umidade, ${weather.condition}. Retorne JSON com a chave "alerts".`;
+        const prompt = `Gere uma dica de cuidado capilar diária para cabelo tipo "${hairType}" com objetivo "${goal}". Retorne JSON com a chave "alerts".`;
 
         const result = await textModel.generateContent(prompt);
         const response = await result.response;
