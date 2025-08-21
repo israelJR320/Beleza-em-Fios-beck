@@ -13,7 +13,7 @@ function extractJson(text) {
     return JSON.parse(match[1].trim());
 }
 
-async function generateAiRoutine(tipoCabelo, objetivos, frequencia, couroCabeludo, espessura, danos) {
+async function generateAiRoutine(tipoCabelo, objetivos, frequencia, couroCabeludo, espessura, danos, startDate) {
     const objetivosString = (objetivos || []).join(', ');
     const danosString = (danos || []).join(', ');
 
@@ -29,7 +29,8 @@ Dados do paciente:
 - Espessura: ${espessura}
 - Danos: ${danosString}
 
-Gere um cronograma capilar personalizado, definindo a duração total (em semanas).
+Gere um cronograma capilar personalizado, definindo a duração total (em semanas). O cronograma deve começar a partir da data de ${startDate}.
+Para cada dia de tratamento, adicione uma propriedade "data" no formato "YYYY-MM-DD".
 Retorne APENAS o JSON no formato abaixo. As chaves devem estar em PORTUGUÊS.
 
 Formato esperado:
@@ -38,6 +39,7 @@ Formato esperado:
   "rotina": [
     {
       "dia": "Segunda-feira",
+      "data": "2025-08-21",
       "tratamento": "hidratação",
       "produtos": [
         {
@@ -77,20 +79,6 @@ Formato esperado:
     } catch (error) {
         console.error('❌ Erro ao gerar cronograma:', error);
         throw new Error('Falha ao gerar cronograma com a IA.');
-    }
-}
-
-async function generateAiTip(tipoCabelo, objetivos, cidade, clima) {
-    const objetivosString = (objetivos || []).join(', ');
-    try {
-        const prompt = `Gere uma dica de cuidado capilar diária para cabelo tipo "${tipoCabelo}" com objetivo "${objetivosString}" na cidade ${cidade}, clima: ${clima.temperatura}°C, ${clima.umidade}% umidade, ${clima.condicao}. Retorne JSON com a chave "alertas".`;
-
-        const result = await textModel.generateContent(prompt);
-        const response = await result.response;
-        return extractJson(response.text());
-    } catch (error) {
-        console.error('Erro ao gerar dica diária:', error);
-        throw new Error('Falha ao gerar dica diária com a IA.');
     }
 }
 

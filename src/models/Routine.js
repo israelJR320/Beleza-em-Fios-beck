@@ -1,4 +1,3 @@
-// src/models/Routine.js
 const mongoose = require('mongoose');
 
 const routineSchema = new mongoose.Schema({
@@ -11,12 +10,10 @@ const routineSchema = new mongoose.Schema({
     duracao: { type: String, required: true },
     rotina: [{
         dia: { type: String, required: true },
-        data: { type: Date, required: false },
+        data: { type: String, required: false }, // ✅ CORREÇÃO: Altera para String, pois o formato YYYY-MM-DD é uma string
         tratamento: { type: String, required: true },
-        produtos: [{
-            tipo: { type: String, required: true },
-            descricao: { type: String, required: true },
-        }],
+        // ✅ CORREÇÃO: Altera para Mixed para aceitar qualquer estrutura da IA
+        produtos: { type: mongoose.Schema.Types.Mixed, required: true }, 
         minutos: { type: Number, required: false },
     }],
     produtos: { type: mongoose.Schema.Types.Mixed, required: true },

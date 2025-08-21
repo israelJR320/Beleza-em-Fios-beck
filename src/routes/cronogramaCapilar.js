@@ -1,3 +1,5 @@
+// src/routes/cronogramaCapilar.js
+
 const express = require('express');
 const router = express.Router();
 const Routine = require('../models/Routine');
@@ -5,9 +7,11 @@ const { generateAiRoutine } = require('../services/aiService');
 const authMiddleware = require('../middleware/authMiddleware');
 
 router.post('/generate', authMiddleware, async (req, res) => {
-    const { tipoCabelo, objetivos, frequencia, condicaoCouroCabeludo, espessura, danos } = req.body;
+    // ✅ CORREÇÃO: Adicionada a nova propriedade 'startDate'
+    const { tipoCabelo, objetivos, frequencia, condicaoCouroCabeludo, espessura, danos, startDate } = req.body;
 
-    if (!tipoCabelo || !objetivos || !frequencia || !condicaoCouroCabeludo || !espessura || !danos) {
+    // ✅ CORREÇÃO: Validação para incluir a data de início
+    if (!tipoCabelo || !objetivos || !frequencia || !condicaoCouroCabeludo || !espessura || !danos || !startDate) {
         return res.status(400).json({ error: 'Todos os campos do formulário são necessários.' });
     }
 
@@ -37,7 +41,8 @@ router.post('/generate', authMiddleware, async (req, res) => {
         
         let aiGeneratedContent;
         try {
-            aiGeneratedContent = await generateAiRoutine(tipoCabelo, objetivos, frequencia, condicaoCouroCabeludo, espessura, danos);
+            // ✅ CORREÇÃO: Passa a nova data de início para a função da IA
+            aiGeneratedContent = await generateAiRoutine(tipoCabelo, objetivos, frequencia, condicaoCouroCabeludo, espessura, danos, startDate);
             console.log('✅ Resposta da IA recebida: (cronogramaCapilar.js)', aiGeneratedContent);
         } catch (aiError) {
             console.error('❌ Erro na chamada da IA: (cronogramaCapilar.js)', aiError);
