@@ -6,13 +6,12 @@ const Routine = require('../models/Routine');
 const { generateAiRoutine } = require('../services/aiService');
 const authMiddleware = require('..//middleware/authMiddleware');
 
-router.post('/generate', async (req, res) => {
-    // ✅ CORREÇÃO: Removido o authMiddleware e a vírgula
+router.post('/generate', authMiddleware, async (req, res) => {
+    // ✅ CORREÇÃO: Adicionada a nova propriedade 'startDate'
     const { tipoCabelo, objetivos, frequencia, condicaoCouroCabeludo, espessura, danos, startDate } = req.body;
 
-    // ... (restante do código permanece o mesmo)
-
-    if (!tipoCabelo || !objetivos || objetivos.length === 0 || !frequencia || !condicaoCouroCabeludo || !espessura || !danos || danos.length === 0 || !startDate) {
+    // ✅ CORREÇÃO: Validação mais robusta para arrays
+    if (!tipoCabelo || !frequencia || !condicaoCouroCabeludo || !espessura || !danos || danos.length === 0 || !objetivos || objetivos.length === 0 || !startDate) {
         return res.status(400).json({ error: 'Todos os campos do formulário são necessários.' });
     }
 
@@ -42,6 +41,7 @@ router.post('/generate', async (req, res) => {
         
         let aiGeneratedContent;
         try {
+            // ✅ CORREÇÃO: Passa a nova data de início para a função da IA
             aiGeneratedContent = await generateAiRoutine(tipoCabelo, objetivos, frequencia, condicaoCouroCabeludo, espessura, danos, startDate);
             console.log('✅ Resposta da IA recebida: (cronogramaCapilar.js)', aiGeneratedContent);
         } catch (aiError) {
