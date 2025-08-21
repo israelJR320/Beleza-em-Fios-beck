@@ -1,36 +1,25 @@
+// src/models/Routine.js
 const mongoose = require('mongoose');
 
-// ATUALIZADO: stepSchema agora inclui treatment, minutes e array de products
-const stepSchema = new mongoose.Schema({
-    day: { type: String, required: true }, // ex: Monday, Tuesday
-    treatment: { type: String, required: true }, // hidratação, nutrição, reconstrução
-    minutes: { type: Number, required: true }, // duração do tratamento
-    products: [{ type: String }] // referência às chaves do objeto 'products'
-});
-
-// ATUALIZADO: products agora é um objeto com type e description
-const productSchema = new mongoose.Schema({
-    key: { type: String, required: true }, // ex: "shampoo", "mask_hidration"
-    type: { type: String, required: true },
-    description: { type: String, required: true }
-});
-
 const routineSchema = new mongoose.Schema({
-    hairType: { type: String, required: true },
-    goal: { type: [String], required: true }, // ✅ CORRIGIDO: Agora é um array de strings
-    frequency: { type: String, required: true },
-    scalp: { type: String, required: true },
-    hairThickness: { type: String, required: true },
-    hairDamage: { type: [String], required: true }, // ✅ CORRIGIDO: Agora é um array de strings
-    duration: { type: String, required: true },
-    steps: [{ // A sua rotina é um array de passos
-        day: { type: String, required: true },
-        date: { type: Date, required: false },
-        treatment: { type: String, required: true },
-        products: { type: [String], required: false },
-        minutes: { type: Number, required: false },
+    tipoCabelo: { type: String, required: true },
+    objetivos: { type: [String], required: true },
+    frequencia: { type: String, required: true },
+    condicaoCouroCabeludo: { type: String, required: true },
+    espessura: { type: String, required: true },
+    danos: { type: [String], required: true },
+    duracao: { type: String, required: true },
+    rotina: [{
+        dia: { type: String, required: true },
+        data: { type: Date, required: false },
+        tratamento: { type: String, required: true },
+        produtos: [{
+            tipo: { type: String, required: true },
+            descricao: { type: String, required: true },
+        }],
+        minutos: { type: Number, required: false },
     }],
-    products: { type: mongoose.Schema.Types.Mixed, required: true },
+    produtos: { type: mongoose.Schema.Types.Mixed, required: true },
     generationDate: { type: Date, default: Date.now },
 });
 

@@ -13,55 +13,48 @@ function extractJson(text) {
     return JSON.parse(match[1].trim());
 }
 
-async function generateAiRoutine(hairType, goal, frequency, scalp, hairThickness, hairDamage) {
-    const hairGoalsString = (goal || []).join(', ');
-    const hairDamageString = (hairDamage || []).join(', ');
+async function generateAiRoutine(tipoCabelo, objetivos, frequencia, couroCabeludo, espessura, danos) {
+    const objetivosString = (objetivos || []).join(', ');
+    const danosString = (danos || []).join(', ');
 
     try {
         const prompt = `
 Atue como tricologista, dermatologista capilar e especialista capilar. Baseie as recomendações em evidências científicas e práticas dermatológicas seguras.
 
 Dados do paciente:
-- Tipo de cabelo: ${hairType}
-- Frequência de lavagem: ${frequency}
-- Couro cabeludo: ${scalp}
-- Objetivo: ${hairGoalsString}
-- Espessura: ${hairThickness}
-- Danos: ${hairDamageString}
+- Tipo de cabelo: ${tipoCabelo}
+- Frequência de lavagem: ${frequencia}
+- Couro cabeludo: ${couroCabeludo}
+- Objetivo: ${objetivosString}
+- Espessura: ${espessura}
+- Danos: ${danosString}
 
-Tarefas:
-1. Gere um cronograma capilar personalizado, definindo a duração total (em semanas).
-2. Inclua os tratamentos recomendados para cada dia da semana (hidratação, nutrição, reconstrução ou cuidados específicos).
-3. Indique produtos e ativos reais e científicos (ex: shampoo com niacinamida, máscara com ceramidas, óleo de argan).
-4. Retorne APENAS o JSON no formato abaixo. As chaves devem estar em INGLÊS.
+Gere um cronograma capilar personalizado, definindo a duração total (em semanas).
+Retorne APENAS o JSON no formato abaixo. As chaves devem estar em PORTUGUÊS.
 
 Formato esperado:
 {
-  "duration": "X weeks",
-  "routine": [
+  "duracao": "X semanas",
+  "rotina": [
     {
-      "day": "Monday",
-      "treatment": "hydration",
-      "products": [
+      "dia": "Segunda-feira",
+      "tratamento": "hidratação",
+      "produtos": [
         {
-          "type": "shampoo",
-          "description": "Shampoo Purificante com Niacinamida"
+          "tipo": "shampoo",
+          "descricao": "Shampoo Purificante com Niacinamida"
         },
         {
-          "type": "mask",
-          "description": "Máscara de Hidratação Profunda com ácido hialurônico"
+          "tipo": "máscara",
+          "descricao": "Máscara de Hidratação Profunda com ácido hialurônico"
         }
       ]
     }
   ],
-  "products": {
+  "produtos": {
     "shampoo_purificante": {
-      "type": "Shampoo Purificante com Niacinamida",
-      "description": "Formulado para controlar a oleosidade do couro cabeludo e fortalecer a fibra capilar."
-    },
-    "mascara_hidratacao": {
-      "type": "Máscara de Hidratação Profunda",
-      "description": "Com ácido hialurônico para repor a umidade e pantenol para dar brilho e maciez."
+      "tipo": "Shampoo Purificante com Niacinamida",
+      "descricao": "Formulado para controlar a oleosidade do couro cabeludo e fortalecer a fibra capilar."
     }
   }
 }
@@ -75,50 +68,29 @@ Formato esperado:
 
         const rawData = extractJson(aiResponseText);
         
-        let processedRoutine = [];
-        if (rawData.routine) {
-            processedRoutine = rawData.routine.map(dayData => {
-                const productsArray = dayData.products.map(product => {
-                    if (typeof product === 'string') {
-                        const productDetails = rawData.products[product];
-                        return {
-                            type: product,
-                            description: productDetails ? productDetails.description : 'Descrição não encontrada.',
-                        };
-                    } else if (product.type && product.description) {
-                        return product;
-                    }
-                    return null;
-                }).filter(p => p !== null);
-
-                return {
-                    day: dayData.day || dayData.dia,
-                    treatment: dayData.treatment || dayData.tratamento,
-                    products: productsArray,
-                };
-            });
-        }
-        
-        const processedProducts = {};
-        if (rawData.products) {
-            for (const key in rawData.products) {
-                const product = rawData.products[key];
-                processedProducts[key] = {
-                    type: product.tipo || product.type,
-                    description: product.descrição || product.description,
-                };
-            }
-        }
-
         return {
-            duration: rawData.duration || rawData.duração,
-            routine: processedRoutine,
-            products: processedProducts,
+            duracao: rawData.duracao,
+            rotina: rawData.rotina,
+            produtos: rawData.produtos,
         };
 
     } catch (error) {
         console.error('❌ Erro ao gerar cronograma:', error);
         throw new Error('Falha ao gerar cronograma com a IA.');
+    }
+}
+
+async function generateAiTip(tipoCabelo, objetivos, cidade, clima) {
+    const objetivosString = (objetivos || []).join(', ');
+    try {
+        const prompt = `Gere uma dica de cuidado capilar diária para cabelo tipo "${tipoCabelo}" com objetivo "${objetivosString}" na cidade ${cidade}, clima: ${clima.temperatura}°C, ${clima.umidade}% umidade, ${clima.condicao}. Retorne JSON com a chave "alertas".`;
+
+        const result = await textModel.generateContent(prompt);
+        const response = await result.response;
+        return extractJson(response.text());
+    } catch (error) {
+        console.error('Erro ao gerar dica diária:', error);
+        throw new Error('Falha ao gerar dica diária com a IA.');
     }
 }
 

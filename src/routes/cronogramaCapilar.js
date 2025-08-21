@@ -5,9 +5,9 @@ const { generateAiRoutine } = require('../services/aiService');
 const authMiddleware = require('../middleware/authMiddleware');
 
 router.post('/generate', authMiddleware, async (req, res) => {
-    const { hairType, goal, frequency, scalp, hairThickness, hairDamage } = req.body;
+    const { tipoCabelo, objetivos, frequencia, condicaoCouroCabeludo, espessura, danos } = req.body;
 
-    if (!hairType || !goal || !frequency || !scalp || !hairThickness || !hairDamage) {
+    if (!tipoCabelo || !objetivos || !frequencia || !condicaoCouroCabeludo || !espessura || !danos) {
         return res.status(400).json({ error: 'Todos os campos do formulário são necessários.' });
     }
 
@@ -15,21 +15,21 @@ router.post('/generate', authMiddleware, async (req, res) => {
         const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
 
         const cachedRoutine = await Routine.findOne({
-            hairType,
-            goal,
-            frequency,
-            scalp,
-            hairThickness,
-            hairDamage,
+            tipoCabelo,
+            objetivos,
+            frequencia,
+            condicaoCouroCabeludo,
+            espessura,
+            danos,
             generationDate: { $gte: twoHoursAgo },
         });
 
         if (cachedRoutine) {
             console.log('✅ Cronograma encontrado no cache! (cronogramaCapilar.js)');
             return res.status(200).json({
-                duration: cachedRoutine.duration,
-                routine: cachedRoutine.steps,
-                products: cachedRoutine.products
+                duracao: cachedRoutine.duracao,
+                rotina: cachedRoutine.rotina,
+                produtos: cachedRoutine.produtos
             });
         }
 
@@ -37,36 +37,36 @@ router.post('/generate', authMiddleware, async (req, res) => {
         
         let aiGeneratedContent;
         try {
-            aiGeneratedContent = await generateAiRoutine(hairType, goal, frequency, scalp, hairThickness, hairDamage);
+            aiGeneratedContent = await generateAiRoutine(tipoCabelo, objetivos, frequencia, condicaoCouroCabeludo, espessura, danos);
             console.log('✅ Resposta da IA recebida: (cronogramaCapilar.js)', aiGeneratedContent);
         } catch (aiError) {
             console.error('❌ Erro na chamada da IA: (cronogramaCapilar.js)', aiError);
             return res.status(500).json({ error: 'Erro ao conectar com o serviço de IA. Tente novamente mais tarde.' });
         }
 
-        if (!aiGeneratedContent || !aiGeneratedContent.routine || !Array.isArray(aiGeneratedContent.routine) || aiGeneratedContent.routine.length === 0) {
+        if (!aiGeneratedContent || !aiGeneratedContent.rotina || !Array.isArray(aiGeneratedContent.rotina) || aiGeneratedContent.rotina.length === 0) {
             console.error('❌ A IA devolveu uma rotina vazia ou inválida. (cronogramaCapilar.js)');
             return res.status(500).json({ error: 'A IA não conseguiu gerar um cronograma válido. Tente outras combinações.' });
         }
 
         const newRoutine = new Routine({
-            hairType,
-            goal,
-            frequency,
-            scalp,
-            hairThickness,
-            hairDamage,
-            duration: aiGeneratedContent.duration,
-            steps: aiGeneratedContent.routine,
-            products: aiGeneratedContent.products,
+            tipoCabelo,
+            objetivos,
+            frequencia,
+            condicaoCouroCabeludo,
+            espessura,
+            danos,
+            duracao: aiGeneratedContent.duracao,
+            rotina: aiGeneratedContent.rotina,
+            produtos: aiGeneratedContent.produtos,
         });
         await newRoutine.save();
 
         console.log('🎉 Cronograma gerado e salvo com sucesso! (cronogramaCapilar.js)');
         res.status(200).json({
-            duration: newRoutine.duration,
-            routine: newRoutine.steps,
-            products: newRoutine.products
+            duracao: newRoutine.duracao,
+            rotina: newRoutine.rotina,
+            produtos: newRoutine.produtos
         });
 
     } catch (error) {
