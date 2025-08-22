@@ -16,11 +16,11 @@ const aiContentSchema = new mongoose.Schema({
 
 // Esquema unificado para as dicas e alertas diários
 const dailyContentSchema = new mongoose.Schema({
-    hairType: {
+    tipoCabelo: {
         type: String,
         required: true,
     },
-    goal: {
+    objetivos: {
         type: String,
         required: true,
     },

@@ -6,6 +6,8 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 // 🔔 CORRIGIDO: A rota agora só usa 'hairType' e 'goal'
 router.get('/', authMiddleware, async (req, res) => {
+    console.log("📥 Query recebida:", req.query);
+
     const { tipoCabelo, objetivos } = req.query;
     if (!tipoCabelo || !objetivos) {
         return res.status(400).json({ error: 'Tipo de cabelo e objetivo são necessários.' });
